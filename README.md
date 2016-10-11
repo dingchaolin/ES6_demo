@@ -1,6 +1,5 @@
-# ES6_demo
-ES6练习代码
-
+## ES6_demo
+#class
 1.super 可以作为方法使用，表示基类的构造函数
 2.可以作为对象使用，代表积累 super.prop  super.method()
 3.实例对象中 cp.__proto__.__proto__ === pt.__proto__
