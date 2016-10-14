@@ -98,7 +98,7 @@ console.log(pt[MethodName]());
 
 console.log(Point.__proto__.hasOwnProperty('toString')); //true
 console.log(Point.__proto__.hasOwnProperty('MoveUp')); //false
-//可以通过实例的__proto__属性为Class添加方法。但是这也意味着 所有的实例都会有该方法 不推荐这个操作
+//可以通过实例的__proto__属性为Class添加方法。
 pt.__proto__.PrintPoint = function () {
     return "print Point";
 };
