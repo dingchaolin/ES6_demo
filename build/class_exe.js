@@ -10,7 +10,29 @@ var _createClass3 = _interopRequireDefault(_createClass2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-//这里是一个能立即执行的类
+var defaultHandler = { get: function get(obj, propName) {
+    return obj[propName];
+  }, set: function set(obj, propName, val) {
+    obj[propName] = val;
+  } };var Proxy = function Proxy(target, handler) {
+  this.target = target;this.handler = handler;this.handler.get = this.handler.get || defaultHandler.get;this.handler.set = this.handler.set || defaultHandler.set;
+};Proxy.prototype.getTrap = function (propertyName) {
+  return this.handler.get(this.target, propertyName);
+};Proxy.prototype.setTrap = function (propertyName, value) {
+  this.handler.set(this.target, propertyName, value);
+};function globalGetInterceptor(object, propertyName) {
+  if (object instanceof Proxy) {
+    return object.getTrap(propertyName);
+  }var value = defaultHandler.get(object, propertyName);if (typeof value === 'function') {
+    return value.bind(object);
+  } else {
+    return value;
+  }
+}function globalSetInterceptor(object, propertyName, value) {
+  if (object instanceof Proxy) {
+    return object.setTrap(propertyName, value);
+  }defaultHandler.set(propertyName, value);
+} //这里是一个能立即执行的类
 //但是babel编译出的代码执行报错
 /*
  C:\ES6\ES6_demo\node_modules\babel-runtime\helpers\classCallCheck.js:7
@@ -35,16 +57,16 @@ var Person = function () {
   function _class(name) {
     (0, _classCallCheck3.default)(this, _class);
 
-    this.name = name;
+    globalSetInterceptor(this, 'name', name);
   }
 
   (0, _createClass3.default)(_class, [{
     key: 'sayName',
     value: function sayName() {
-      console.log(this.name);
+      globalGetInterceptor(console, 'log')(globalGetInterceptor(this, 'name'));
     }
   }]);
   return _class;
 }()('dcl');
 
-Person.sayName();
+globalGetInterceptor(Person, 'sayName')();

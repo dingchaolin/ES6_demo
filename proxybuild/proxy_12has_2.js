@@ -1,7 +1,5 @@
 "use strict";
 
-require("bable-polyfill");
-
 var defaultHandler = { get: function get(obj, propName) {
         return obj[propName];
     }, set: function set(obj, propName, val) {
@@ -12,7 +10,8 @@ var defaultHandler = { get: function get(obj, propName) {
     return this.handler.get(this.target, propertyName);
 };Proxy.prototype.setTrap = function (propertyName, value) {
     this.handler.set(this.target, propertyName, value);
-};function globalGetInterceptor(object, propertyName) {
+};
+function globalGetInterceptor(object, propertyName) {
     if (object instanceof Proxy) {
         return object.getTrap(propertyName);
     }var value = defaultHandler.get(object, propertyName);if (typeof value === 'function') {
@@ -24,13 +23,32 @@ var defaultHandler = { get: function get(obj, propName) {
     if (object instanceof Proxy) {
         return object.setTrap(propertyName, value);
     }defaultHandler.set(propertyName, value);
-} //解决浏览器兼容问题
+} //has 拦截对for in 不生效  has对in生效
+var stu1 = { name: "zhangsan", "score": 59 };
+var stu2 = { name: "lisi", "score": 99 };
 
-var data = globalGetInterceptor(Array, "from")("abcd");
-var sum = function sum(n) {
-    var total = 0;
-    for (var i = 0; i < n; i++) {
-        total += i;
+var handler = {
+    has: function has(target, prop) {
+        if (prop === 'score' && globalGetInterceptor(target, "prop") < 60) {
+            globalGetInterceptor(console, "log")(globalGetInterceptor(target, "name") + " \u4E0D\u53CA\u683C\uFF01");
+            return false;
+        }
+        return prop in target;
     }
-    return total;
 };
+
+var proxy1 = new Proxy(stu1, handler);
+var proxy2 = new Proxy(stu2, handler);
+
+'score' in proxy1; // zhangsan 不及格  false
+'score' in proxy2; //true
+
+for (var a in proxy1) {
+    globalGetInterceptor(console, "log")(globalGetInterceptor(proxy1, "a"));
+}
+//zhangsan 59
+
+for (var b in proxy2) {
+    globalGetInterceptor(console, "log")(globalGetInterceptor(proxy2, "b"));
+}
+//lisi 99

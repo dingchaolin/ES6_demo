@@ -18,10 +18,33 @@ var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var defaultHandler = {
+    get: function get(obj, propName) {
+        return obj[propName];
+    }, set: function set(obj, propName, val) {
+        obj[propName] = val;
+    } };var Proxy = function Proxy(target, handler) {
+    this.target = target;this.handler = handler;this.handler.get = this.handler.get || defaultHandler.get;this.handler.set = this.handler.set || defaultHandler.set;
+};Proxy.prototype.getTrap = function (propertyName) {
+    return this.handler.get(this.target, propertyName);
+};Proxy.prototype.setTrap = function (propertyName, value) {
+    this.handler.set(this.target, propertyName, value);
+};function globalGetInterceptor(object, propertyName) {
+    if (object instanceof Proxy) {
+        return object.getTrap(propertyName);
+    }var value = defaultHandler.get(object, propertyName);if (typeof value === 'function') {
+        return value.bind(object);
+    } else {
+        return value;
+    }
+}function globalSetInterceptor(object, propertyName, value) {
+    if (object instanceof Proxy) {
+        return object.setTrap(propertyName, value);
+    }defaultHandler.set(propertyName, value);
+}
 var ERROR = function ERROR() {
     (0, _classCallCheck3.default)(this, ERROR);
-
-    this.stack = "ERROR stack";
+    globalSetInterceptor(this, "stack", "ERROR stack");
 };
 
 var ExtendableError = function (_Error) {
@@ -32,9 +55,9 @@ var ExtendableError = function (_Error) {
 
         var _this = (0, _possibleConstructorReturn3.default)(this, (ExtendableError.__proto__ || (0, _getPrototypeOf2.default)(ExtendableError)).call(this));
 
-        _this.message = message;
-        _this.stack = new Error().stack;
-        _this.name = _this.constructor.name;
+        globalSetInterceptor(_this, "message", message);
+        globalSetInterceptor(_this, "stack", globalGetInterceptor(new Error(), "stack"));
+        globalSetInterceptor(_this, "name", globalGetInterceptor(globalGetInterceptor(_this, "constructor"), "name"));
         return _this;
     }
 
@@ -49,9 +72,9 @@ var ExtendableERROR = function (_ERROR) {
 
         var _this2 = (0, _possibleConstructorReturn3.default)(this, (ExtendableERROR.__proto__ || (0, _getPrototypeOf2.default)(ExtendableERROR)).call(this));
 
-        _this2.message = message;
-        _this2.stack = new ERROR().stack;
-        _this2.name = _this2.constructor.name;
+        globalSetInterceptor(_this2, "message", message);
+        globalSetInterceptor(_this2, "stack", globalGetInterceptor(new ERROR(), "stack"));
+        globalSetInterceptor(_this2, "name", globalGetInterceptor(globalGetInterceptor(_this2, "constructor"), "name"));
         return _this2;
     }
 
@@ -83,20 +106,20 @@ var MyERROR = function (_ExtendableERROR) {
 
 
 var myerror = new MyError("out of range");
-console.log("message=" + myerror.message);
-console.log("name=" + myerror.name);
-console.log("stack=" + myerror.stack);
+globalGetInterceptor(console, "log")("message=" + globalGetInterceptor(myerror, "message"));
+globalGetInterceptor(console, "log")("name=" + globalGetInterceptor(myerror, "name"));
+globalGetInterceptor(console, "log")("stack=" + globalGetInterceptor(myerror, "stack"));
 //实例 myerror 是 Error的实例  继承Error的类 myerror都不是他们的实例
-console.log(myerror instanceof Error); //ture
-console.log(myerror instanceof MyError); //false
-console.log(myerror instanceof ExtendableError); //false
+globalGetInterceptor(console, "log")(myerror instanceof Error); //ture
+globalGetInterceptor(console, "log")(myerror instanceof MyError); //false
+globalGetInterceptor(console, "log")(myerror instanceof ExtendableError); //false
 
 //非原生构造函数的继承
 var myERROR = new MyERROR("out of range");
-console.log("message=" + myERROR.message);
-console.log("name=" + myERROR.name);
-console.log("stack=" + myERROR.stack);
+globalGetInterceptor(console, "log")("message=" + globalGetInterceptor(myERROR, "message"));
+globalGetInterceptor(console, "log")("name=" + globalGetInterceptor(myERROR, "name"));
+globalGetInterceptor(console, "log")("stack=" + globalGetInterceptor(myERROR, "stack"));
 //实例 myERROR 是 ERROR的实例  继承ERROR的类 myERROR都是他们的实例
-console.log(myERROR instanceof ERROR); //ture
-console.log(myERROR instanceof MyERROR); //true
-console.log(myERROR instanceof ExtendableERROR); //true
+globalGetInterceptor(console, "log")(myERROR instanceof ERROR); //ture
+globalGetInterceptor(console, "log")(myERROR instanceof MyERROR); //true
+globalGetInterceptor(console, "log")(myERROR instanceof ExtendableERROR); //true

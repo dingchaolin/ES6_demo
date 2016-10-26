@@ -1,7 +1,5 @@
 "use strict";
 
-require("bable-polyfill");
-
 var defaultHandler = { get: function get(obj, propName) {
         return obj[propName];
     }, set: function set(obj, propName, val) {
@@ -24,13 +22,33 @@ var defaultHandler = { get: function get(obj, propName) {
     if (object instanceof Proxy) {
         return object.setTrap(propertyName, value);
     }defaultHandler.set(propertyName, value);
-} //解决浏览器兼容问题
+} //链式调用   不能正常执行
+var pipe = function () {
+    return function (value) {
+        var funcStack = [];
+        var oproxy = new Proxy({}, {
+            get: function get(pipeObject, fnName) {
+                if (fnName === 'name') {
+                    return funcStack.reduce(function (val, fn) {
+                        return fn(val);
+                    }, value);
+                }
+                funcStack.push(window[fnName]); //window is not defined
+                return oproxy;
+            }
+        });
+        return oproxy;
+    };
+}();
 
-var data = globalGetInterceptor(Array, "from")("abcd");
-var sum = function sum(n) {
-    var total = 0;
-    for (var i = 0; i < n; i++) {
-        total += i;
-    }
-    return total;
+var double = function double(n) {
+    return n * 2;
 };
+var pow = function pow(n) {
+    return n * n;
+};
+var reverseInt = function reverseInt(n) {
+    return globalGetInterceptor(globalGetInterceptor(globalGetInterceptor(globalGetInterceptor(n, "toString")(), "split")(""), "reverse")(), "join")("") | 0;
+};
+var n = globalGetInterceptor(globalGetInterceptor(globalGetInterceptor(globalGetInterceptor(pipe(3), "double"), "pow"), "reverseInt"), "get");
+globalGetInterceptor(console, "log")(n);

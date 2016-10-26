@@ -12,18 +12,6 @@ var _inherits2 = require("babel-runtime/helpers/inherits");
 
 var _inherits3 = _interopRequireDefault(_inherits2);
 
-var _defineProperty = require("babel-runtime/core-js/object/define-property");
-
-var _defineProperty2 = _interopRequireDefault(_defineProperty);
-
-var _getOwnPropertyDescriptor = require("babel-runtime/core-js/object/get-own-property-descriptor");
-
-var _getOwnPropertyDescriptor2 = _interopRequireDefault(_getOwnPropertyDescriptor);
-
-var _ownKeys = require("babel-runtime/core-js/reflect/own-keys");
-
-var _ownKeys2 = _interopRequireDefault(_ownKeys);
-
 var _getIterator2 = require("babel-runtime/core-js/get-iterator");
 
 var _getIterator3 = _interopRequireDefault(_getIterator2);
@@ -34,7 +22,29 @@ var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function mix() {
+var defaultHandler = { get: function get(obj, propName) {
+        return obj[propName];
+    }, set: function set(obj, propName, val) {
+        obj[propName] = val;
+    } };var Proxy = function Proxy(target, handler) {
+    this.target = target;this.handler = handler;this.handler.get = this.handler.get || defaultHandler.get;this.handler.set = this.handler.set || defaultHandler.set;
+};Proxy.prototype.getTrap = function (propertyName) {
+    return this.handler.get(this.target, propertyName);
+};Proxy.prototype.setTrap = function (propertyName, value) {
+    this.handler.set(this.target, propertyName, value);
+};function globalGetInterceptor(object, propertyName) {
+    if (object instanceof Proxy) {
+        return object.getTrap(propertyName);
+    }var value = defaultHandler.get(object, propertyName);if (typeof value === 'function') {
+        return value.bind(object);
+    } else {
+        return value;
+    }
+}function globalSetInterceptor(object, propertyName, value) {
+    if (object instanceof Proxy) {
+        return object.setTrap(propertyName, value);
+    }defaultHandler.set(propertyName, value);
+}function mix() {
     var Mix = function Mix() {
         (0, _classCallCheck3.default)(this, Mix);
     };
@@ -45,12 +55,12 @@ function mix() {
         var _iteratorError = undefined;
 
         try {
-            for (var _iterator = (0, _getIterator3.default)((0, _ownKeys2.default)(source)), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            for (var _iterator = (0, _getIterator3.default)(globalGetInterceptor(Reflect, "ownKeys")(source)), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                 var key = _step.value;
 
                 if (key !== "constructor" && key !== "prototype" && key !== "name") {
-                    var desc = (0, _getOwnPropertyDescriptor2.default)(source, key);
-                    (0, _defineProperty2.default)(target, key, desc);
+                    var desc = globalGetInterceptor(Object, "getOwnPropertyDescriptor")(source, key);
+                    globalGetInterceptor(Object, "defineProperty")(target, key, desc);
                 }
             }
         } catch (err) {
@@ -82,7 +92,7 @@ function mix() {
             var mixin = _step2.value;
 
             copyProperties(Mix, mixin); //继承构造函数
-            copyProperties(Mix.prototype, mixin.prototype); //继承方法
+            copyProperties(globalGetInterceptor(Mix, "prototype"), globalGetInterceptor(mixin, "prototype")); //继承方法
         }
     } catch (err) {
         _didIteratorError2 = true;

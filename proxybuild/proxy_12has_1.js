@@ -1,6 +1,4 @@
-"use strict";
-
-require("bable-polyfill");
+'use strict';
 
 var defaultHandler = { get: function get(obj, propName) {
         return obj[propName];
@@ -24,13 +22,14 @@ var defaultHandler = { get: function get(obj, propName) {
     if (object instanceof Proxy) {
         return object.setTrap(propertyName, value);
     }defaultHandler.set(propertyName, value);
-} //解决浏览器兼容问题
+}var obj = { age: 10 };
+globalGetInterceptor(Object, 'preventExtensions')(obj); //禁止扩展该对象
 
-var data = globalGetInterceptor(Array, "from")("abcd");
-var sum = function sum(n) {
-    var total = 0;
-    for (var i = 0; i < n; i++) {
-        total += i;
+var proxy = new Proxy(obj, {
+    //has调用的是HasProperty 而不是 HasOwnProperty  has 方法不判断一个方法是自身的方法 还是继承的方法
+    has: function has(target, prop) {
+        return false;
     }
-    return total;
-};
+});
+
+'age' in proxy; //TypeError

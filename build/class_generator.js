@@ -1,9 +1,5 @@
 "use strict";
 
-var _symbol = require("babel-runtime/core-js/symbol");
-
-var _symbol2 = _interopRequireDefault(_symbol);
-
 var _regenerator = require("babel-runtime/regenerator");
 
 var _regenerator2 = _interopRequireDefault(_regenerator);
@@ -12,9 +8,9 @@ var _getIterator2 = require("babel-runtime/core-js/get-iterator");
 
 var _getIterator3 = _interopRequireDefault(_getIterator2);
 
-var _iterator3 = require("babel-runtime/core-js/symbol/iterator");
+var _symbol = require("babel-runtime/core-js/symbol");
 
-var _iterator4 = _interopRequireDefault(_iterator3);
+var _symbol2 = _interopRequireDefault(_symbol);
 
 var _classCallCheck2 = require("babel-runtime/helpers/classCallCheck");
 
@@ -26,6 +22,29 @@ var _createClass3 = _interopRequireDefault(_createClass2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var defaultHandler = { get: function get(obj, propName) {
+        return obj[propName];
+    }, set: function set(obj, propName, val) {
+        obj[propName] = val;
+    } };var Proxy = function Proxy(target, handler) {
+    this.target = target;this.handler = handler;this.handler.get = this.handler.get || defaultHandler.get;this.handler.set = this.handler.set || defaultHandler.set;
+};Proxy.prototype.getTrap = function (propertyName) {
+    return this.handler.get(this.target, propertyName);
+};Proxy.prototype.setTrap = function (propertyName, value) {
+    this.handler.set(this.target, propertyName, value);
+};function globalGetInterceptor(object, propertyName) {
+    if (object instanceof Proxy) {
+        return object.getTrap(propertyName);
+    }var value = defaultHandler.get(object, propertyName);if (typeof value === 'function') {
+        return value.bind(object);
+    } else {
+        return value;
+    }
+}function globalSetInterceptor(object, propertyName, value) {
+    if (object instanceof Proxy) {
+        return object.setTrap(propertyName, value);
+    }defaultHandler.set(propertyName, value);
+}
 var Foo = function () {
     //spread
     function Foo() {
@@ -35,13 +54,13 @@ var Foo = function () {
             args[_key] = arguments[_key];
         }
 
-        this.args = args;
+        globalSetInterceptor(this, "args", args);
     }
     //* 表示generator 方法
 
 
     (0, _createClass3.default)(Foo, [{
-        key: _iterator4.default,
+        key: globalGetInterceptor(_symbol2.default, "iterator"),
         value: _regenerator2.default.mark(function value() {
             var _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, arg;
 
@@ -53,7 +72,7 @@ var Foo = function () {
                             _didIteratorError = false;
                             _iteratorError = undefined;
                             _context.prev = 3;
-                            _iterator = (0, _getIterator3.default)(this.args);
+                            _iterator = (0, _getIterator3.default)(globalGetInterceptor(this, "args"));
 
                         case 5:
                             if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
@@ -125,7 +144,7 @@ try {
     for (var _iterator2 = (0, _getIterator3.default)(new Foo("hello", "world")), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
         var x = _step2.value;
 
-        console.log(x);
+        globalGetInterceptor(console, "log")(x);
     }
 } catch (err) {
     _didIteratorError2 = true;
@@ -142,5 +161,5 @@ try {
     }
 }
 
-console.log((0, _symbol2.default)("hello") === (0, _symbol2.default)("hello")); //false
-console.log((0, _symbol2.default)("hello")); //Symbol(hello)
+globalGetInterceptor(console, "log")((0, _symbol2.default)("hello") === (0, _symbol2.default)("hello")); //false
+globalGetInterceptor(console, "log")((0, _symbol2.default)("hello")); //Symbol(hello)

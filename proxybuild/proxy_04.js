@@ -1,6 +1,4 @@
-"use strict";
-
-require("bable-polyfill");
+'use strict';
 
 var defaultHandler = { get: function get(obj, propName) {
         return obj[propName];
@@ -24,13 +22,32 @@ var defaultHandler = { get: function get(obj, propName) {
     if (object instanceof Proxy) {
         return object.setTrap(propertyName, value);
     }defaultHandler.set(propertyName, value);
-} //解决浏览器兼容问题
+}var person = { name: 'dcl' };
+/*
+//使用一个变量竟然读不出属性的值
+var handler = {
+    get:function(target, key ){
+        if( key in target ){
+            console.log( target );
 
-var data = globalGetInterceptor(Array, "from")("abcd");
-var sum = function sum(n) {
-    var total = 0;
-    for (var i = 0; i < n; i++) {
-        total += i;
+            return target[key];
+        }
+        else{
+            throw new ReferenceError(`${key} not exist`);
+        }
     }
-    return total;
-};
+}
+*/
+var proxy = new Proxy(person, {
+    get: function get(target, key) {
+        if (key in target) {
+            //console.log( target );
+            return target[key];
+        } else {
+            throw new ReferenceError(key + ' not exist');
+        }
+    }
+});
+
+globalGetInterceptor(console, 'log')(globalGetInterceptor(proxy, 'name'));
+globalGetInterceptor(console, 'log')(globalGetInterceptor(proxy, 'foo'));

@@ -1,6 +1,4 @@
-"use strict";
-
-require("bable-polyfill");
+'use strict';
 
 var defaultHandler = { get: function get(obj, propName) {
         return obj[propName];
@@ -24,13 +22,22 @@ var defaultHandler = { get: function get(obj, propName) {
     if (object instanceof Proxy) {
         return object.setTrap(propertyName, value);
     }defaultHandler.set(propertyName, value);
-} //解决浏览器兼容问题
-
-var data = globalGetInterceptor(Array, "from")("abcd");
-var sum = function sum(n) {
-    var total = 0;
-    for (var i = 0; i < n; i++) {
-        total += i;
+}var proxy1 = new Proxy({}, {
+    get: function get(target, key) {
+        return 35;
     }
-    return total;
-};
+});
+
+//console.log( proxy1.name );//35
+//console.log( proxy1.title );//35
+
+//一个空的proxy对象
+var target = {};
+var handler = {};
+var proxy = new Proxy(target, handler);
+globalSetInterceptor(proxy, 'a', 'a');
+globalGetInterceptor(console, 'log')(globalGetInterceptor(target, 'a'));
+
+var obj = globalGetInterceptor(Object, 'create')(proxy);
+var obj1 = globalGetInterceptor(Object, 'create')(proxy1);
+globalGetInterceptor(console, 'log')('obj1.time = ' + globalGetInterceptor(obj1, 'time'));globalGetInterceptor(console, 'log')('obj.a = ' + globalGetInterceptor(obj, 'a'));

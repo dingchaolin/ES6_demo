@@ -1,7 +1,5 @@
 "use strict";
 
-require("bable-polyfill");
-
 var defaultHandler = { get: function get(obj, propName) {
         return obj[propName];
     }, set: function set(obj, propName, val) {
@@ -24,13 +22,21 @@ var defaultHandler = { get: function get(obj, propName) {
     if (object instanceof Proxy) {
         return object.setTrap(propertyName, value);
     }defaultHandler.set(propertyName, value);
-} //解决浏览器兼容问题
-
-var data = globalGetInterceptor(Array, "from")("abcd");
-var sum = function sum(n) {
-    var total = 0;
-    for (var i = 0; i < n; i++) {
-        total += i;
+}var twice = {
+    apply: function apply(target, ctx, args) {
+        return globalGetInterceptor(Reflect, "apply").apply(undefined, arguments) * 2;
     }
-    return total;
 };
+
+function sum(left, right) {
+    return left + right;
+}
+
+var proxy = new Proxy(sum, twice);
+//直接调用报错  proxy is not function
+proxy(1, 2); //6
+globalGetInterceptor(proxy, "call")(null, 5, 6); //22
+globalGetInterceptor(proxy, "apply")(null, [7, 8]); //30
+
+//直接调用 Reflect.apply 也会被拦截
+globalGetInterceptor(Reflect, "apply")(proxy, null, [7, 8]); //30

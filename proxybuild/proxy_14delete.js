@@ -1,6 +1,4 @@
-"use strict";
-
-require("bable-polyfill");
+'use strict';
 
 var defaultHandler = { get: function get(obj, propName) {
         return obj[propName];
@@ -24,13 +22,27 @@ var defaultHandler = { get: function get(obj, propName) {
     if (object instanceof Proxy) {
         return object.setTrap(propertyName, value);
     }defaultHandler.set(propertyName, value);
-} //解决浏览器兼容问题
-
-var data = globalGetInterceptor(Array, "from")("abcd");
-var sum = function sum(n) {
-    var total = 0;
-    for (var i = 0; i < n; i++) {
-        total += i;
+} //deleteProperty 用于拦截delete操作
+//如果deleteProperty抛出异常或者返回false 当前元素的属性就不会被删除
+var handler = {
+    deleteProperty: function deleteProperty(target, key) {
+        invariant(key, 'delete');
+        return true; //如果返回false会直接导致删除属性抛出异常
     }
-    return total;
 };
+
+function invariant(key, action) {
+    if (globalGetInterceptor(key, 'indexOf')('_') == 0) {
+        throw new Error("private!");
+    }
+}
+
+var target = { _name: "dcl" };
+var proxy = new Proxy(target, {
+    deleteProperty: function deleteProperty(target, key) {
+        invariant(key, 'delete');
+        return true;
+    }
+});
+
+delete globalGetInterceptor(proxy, '_name');

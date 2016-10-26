@@ -1,17 +1,5 @@
 "use strict";
 
-var _getOwnPropertyNames = require("babel-runtime/core-js/object/get-own-property-names");
-
-var _getOwnPropertyNames2 = _interopRequireDefault(_getOwnPropertyNames);
-
-var _keys = require("babel-runtime/core-js/object/keys");
-
-var _keys2 = _interopRequireDefault(_keys);
-
-var _assign = require("babel-runtime/core-js/object/assign");
-
-var _assign2 = _interopRequireDefault(_assign);
-
 var _classCallCheck2 = require("babel-runtime/helpers/classCallCheck");
 
 var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
@@ -22,7 +10,30 @@ var _createClass3 = _interopRequireDefault(_createClass2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var MethodName = "GetPoint";
+var defaultHandler = { get: function get(obj, propName) {
+        return obj[propName];
+    }, set: function set(obj, propName, val) {
+        obj[propName] = val;
+    } };var Proxy = function Proxy(target, handler) {
+    this.target = target;this.handler = handler;this.handler.get = this.handler.get || defaultHandler.get;this.handler.set = this.handler.set || defaultHandler.set;
+};
+Proxy.prototype.getTrap = function (propertyName) {
+    return this.handler.get(this.target, propertyName);
+};Proxy.prototype.setTrap = function (propertyName, value) {
+    this.handler.set(this.target, propertyName, value);
+};function globalGetInterceptor(object, propertyName) {
+    if (object instanceof Proxy) {
+        return object.getTrap(propertyName);
+    }var value = defaultHandler.get(object, propertyName);if (typeof value === 'function') {
+        return value.bind(object);
+    } else {
+        return value;
+    }
+}function globalSetInterceptor(object, propertyName, value) {
+    if (object instanceof Proxy) {
+        return object.setTrap(propertyName, value);
+    }defaultHandler.set(propertyName, value);
+}var MethodName = "GetPoint";
 
 var Point = function () {
     //类的构造函数使用new才能调用
@@ -30,8 +41,8 @@ var Point = function () {
         (0, _classCallCheck3.default)(this, Point);
 
         //都是定义本身
-        this.x = x;
-        this.y = y;
+        globalSetInterceptor(this, "x", x);
+        globalSetInterceptor(this, "y", y);
     }
     //实例的属性除非显式定义在其本身（即定义在this对象上），否则都是定义在原型上（即定义在class上）。
     //所有的方法的定义都是在prototype上定义的
@@ -42,50 +53,50 @@ var Point = function () {
     (0, _createClass3.default)(Point, [{
         key: "toString",
         value: function toString() {
-            return "(" + this.x + "," + this.y + ")";
+            return "(" + globalGetInterceptor(this, "x") + "," + globalGetInterceptor(this, "y") + ")";
         }
         //类的属性名可以采用表达式的方式
 
     }, {
         key: MethodName,
         value: function value() {
-            return "(" + this.x + "," + this.y + ")";
+            return "(" + globalGetInterceptor(this, "x") + "," + globalGetInterceptor(this, "y") + ")";
         }
     }]);
     return Point;
 }();
 
-(0, _assign2.default)(Point.prototype, {
+globalGetInterceptor(Object, "assign")(globalGetInterceptor(Point, "prototype"), {
     MoveUp: function MoveUp() {
-        this.x--;
+        globalGetInterceptor(this, "x")--;
     },
     MoveDown: function MoveDown() {
-        this.x++;
+        globalGetInterceptor(this, "x")++;
     },
     MoveLeft: function MoveLeft() {
-        this.y--;
+        globalGetInterceptor(this, "y")--;
     },
     MoveRight: function MoveRight() {
-        this.y++;
+        globalGetInterceptor(this, "y")++;
     }
 });
 
 var pt = new Point(3, 5);
-pt.Type = function () {
+globalSetInterceptor(pt, "Type", function () {
     return "point";
-};
+});
 
-console.log(pt.toString());
-var flag = Point == Point.prototype.constructor;
-var flag1 = pt.constructor == Point.prototype.constructor;
+globalGetInterceptor(console, "log")(globalGetInterceptor(pt, "toString")());
+var flag = Point == globalGetInterceptor(globalGetInterceptor(Point, "prototype"), "constructor");
+var flag1 = globalGetInterceptor(pt, "constructor") == globalGetInterceptor(globalGetInterceptor(Point, "prototype"), "constructor");
 
-console.log("{flag = " + flag + ", flag1 = " + flag1);
+globalGetInterceptor(console, "log")("{flag = " + flag + ", flag1 = " + flag1);
 
-console.log(Point.prototype);
+globalGetInterceptor(console, "log")(globalGetInterceptor(Point, "prototype"));
 
-console.log((0, _keys2.default)(Point.prototype)); //[ 'MoveUp', 'MoveDown', 'MoveLeft', 'MoveRight' ] 类中定义的方法不可以枚举 与ES5中不一样
+globalGetInterceptor(console, "log")(globalGetInterceptor(Object, "keys")(globalGetInterceptor(Point, "prototype"))); //[ 'MoveUp', 'MoveDown', 'MoveLeft', 'MoveRight' ] 类中定义的方法不可以枚举 与ES5中不一样
 
-console.log((0, _getOwnPropertyNames2.default)(Point.prototype));
+globalGetInterceptor(console, "log")(globalGetInterceptor(Object, "getOwnPropertyNames")(globalGetInterceptor(Point, "prototype")));
 /*
 [ 'constructor',
 'toString',
@@ -94,13 +105,13 @@ console.log((0, _getOwnPropertyNames2.default)(Point.prototype));
     'MoveLeft',
     'MoveRight' ]
     */
-console.log(pt[MethodName]());
+globalGetInterceptor(console, "log")(globalGetInterceptor(pt, "MethodName")());
 
-console.log(Point.__proto__.hasOwnProperty('toString')); //true
-console.log(Point.__proto__.hasOwnProperty('MoveUp')); //false
+globalGetInterceptor(console, "log")(globalGetInterceptor(globalGetInterceptor(Point, "__proto__"), "hasOwnProperty")('toString')); //true
+globalGetInterceptor(console, "log")(globalGetInterceptor(globalGetInterceptor(Point, "__proto__"), "hasOwnProperty")('MoveUp')); //false
 //可以通过实例的__proto__属性为Class添加方法。
-pt.__proto__.PrintPoint = function () {
+globalSetInterceptor(globalGetInterceptor(pt, "__proto__"), "PrintPoint", function () {
     return "print Point";
-};
+});
 
-console.log(pt.PrintPoint());
+globalGetInterceptor(console, "log")(globalGetInterceptor(pt, "PrintPoint")());
